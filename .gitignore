@@ -1,0 +1,5 @@
+node_modules
+node_modules/*
+
+public/scripts/launchpad.old.js
+public/scripts/script.old.js

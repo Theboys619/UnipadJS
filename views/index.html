@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>replit</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link href="styles/style.css" rel="stylesheet" type="text/css" />
+  <link href="styles/launchpad.css" rel="stylesheet" type="text/css" />
+  <script src="/libs/jszip.js"></script>
+  <script src="/libs/howler.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <div id="launchpad" class="launchpad-container">
+      <div id="lp-top-left" class="lp-section"></div>
+      <div id="lp-top-middle" class="lp-section">
+        <div id="circle-btns-top" class="lp-func-btns lp-func-col"></div>
+      </div>
+      <div id="lp-top-right" class="lp-section"></div>
+      <div id="lp-middle-left" class="lp-section">
+        <div id="circle-btns-left" class="lp-func-btns lp-func-row"></div>
+      </div>
+      <div id="lp-middle-middle" class="lp-section">
+        <div id="launchpad-btns"></div>
+      </div>
+      <div id="lp-middle-right" class="lp-section">
+        <div id="circle-btns-right" class="lp-func-btns lp-func-row"></div>
+      </div>
+      <div id="lp-bottom-left" class="lp-section"></div>
+      <div id="lp-bottom-middle" class="lp-section">
+        <div id="circle-btns-bottom" class="lp-func-btns lp-func-col"></div>
+      </div>
+      <div id="lp-bottom-right" class="lp-section"></div>
+    </div>
+    <div id="launchpad-sidebar" class="sidebar">
+      <div class="lp-info">
+        <p class="lp-title">Not Loaded</p>
+        <p class="lp-artist">Not Loaded</p>
+        <p class="lp-author">Project By: Not Loaded</p>
+      </div>
+
+      <div class="lp-settings">
+        <label class="lp-upload">
+          <input type="file" id="unipack" accept=".zip">
+          <i class="material-symbols-outlined">file_open</i>Load UniPack
+        </label>
+
+        <div class="autoplay-btns">
+          <button id="autoplay" class="autoplay-btn"><i class="material-symbols-outlined">play_arrow</i>Autoplay</button>
+          <button id="autoplay-drums" class="autoplay-btn"><i class="material-symbols-outlined">skip_next</i>Autoplay Drums</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- <div class="launchpad-container">
+    <canvas id="launchpad"></canvas>
+  </div> -->
+  <script src="scripts/launchpad.js"></script>
+  <script src="scripts/script.js"></script>
+</body>
+
+</html>

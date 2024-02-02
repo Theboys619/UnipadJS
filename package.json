@@ -1,0 +1,15 @@
+{
+  "name": "unipack",
+  "version": "1.0.0",
+  "description": "Unipack reader and player!",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["unipack", "unitor", "unipad", "emulator", "launchpad"],
+  "author": "Theboys619",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
