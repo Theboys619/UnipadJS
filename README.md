@@ -10,7 +10,7 @@ Made with HTML5, CSS, and JS. No React or other frameworks.
 #### Lightshow
 ![Lightshow](image-1.png)
 
-[Youtube Video](https://www.youtube.com/embed/DL-RYvesPdU?si=rvr3HK5ooIZ9c0Lu)
+[Youtube Video](https://www.youtube.com/watch?v=DL-RYvesPdU)
 
 ## What It Can Do
 - Read Unipacks
