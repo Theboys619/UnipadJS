@@ -28,13 +28,13 @@ Made with HTML5, CSS, and JS. No React or other frameworks.
 - Multi-Launchpad
 
 ## Plans
-- MIDI Launchpad Support
-- Seek/Pause Autoplay
-- Record Autoplay
-- Record buttons presses (for learning)
-- Custom Themes
-- Custom Launchpad Skins
-- Saving preferences
+- [ ] MIDI Launchpad Support
+- [ ] Seek/Pause Autoplay
+- [ ] Record Autoplay
+- [ ] Record buttons presses (for learning)
+- [x] Custom Themes
+- [x] Custom Launchpad Skins
+- [ ] Saving preferences
 
 ## Dependencies
 - HowlerJS
