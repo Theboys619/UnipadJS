@@ -9,7 +9,7 @@ unipack.onchange = (e) => {
   }
 }
 
-const virtualPad = new VirtualLaunchpad(launchpadElement, "rgba(15, 15, 15, 0.95)");
+const virtualPad = new VirtualLaunchpad(launchpadElement);
 
 document.addEventListener("keydown", (e) => {
   if (e.code == "Space") {

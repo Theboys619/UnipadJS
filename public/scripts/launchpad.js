@@ -593,7 +593,7 @@ class Button {
 }
 
 class VirtualLaunchpad {
-  constructor(element, offColor = "#808080") {
+  constructor(element, offColor) {
     /**
      * @type {HTMLDivElement}
      */
@@ -612,7 +612,9 @@ class VirtualLaunchpad {
     this.buttons = [];
     this.funcButtons = [];
 
-    this.offColor = offColor;
+    this.noOffColor = offColor ? false : true;
+
+    this.offColor = this.noOffColor ? "#808080" : offColor;
     velocities[0] = this.offColor;
 
     this.autoPlay = "";
@@ -808,7 +810,7 @@ class VirtualLaunchpad {
    */
   _createButton(x, y) {
     const btn = document.createElement("div");
-    btn.className = "lp-btn";
+    btn.className = "lp-btn " + `lp-btn-${x+1}-${y+1}`;
 
     btn.setAttribute("data-btn-id", `\"${x+1},${y+1}\"`);
 
@@ -863,11 +865,13 @@ class VirtualLaunchpad {
 
     btn.style.backgroundColor = this.offColor;
 
+    const funcOffColor = btn.style.getPropertyValue("background-color");
+
     this.funcButtons.push({
       element: btn,
       reset: () => {
         btn.style.boxShadow = ``;
-        btn.style.backgroundColor = this.offColor;
+        btn.style.backgroundColor = this.noOffColor ? funcOffColor : this.offColor;
       },
       setColor: (color) => {
         btn.style.backgroundColor = color;
@@ -911,6 +915,18 @@ class VirtualLaunchpad {
   }
 
   populate() {
+    let testBtn = this._createButton(0, 0);
+
+    if (testBtn) {
+      if (this.noOffColor) {
+        this.offColor = testBtn.style.getPropertyValue("background-color");
+        velocities[0] = this.offColor;
+      }
+    }
+
+    testBtn.remove();
+    this.buttons = [];
+
     for (let i = 1; i <= 32; i++) {
       this._createFuncButton(i);
     }
@@ -970,11 +986,11 @@ class VirtualLaunchpad {
       const autoplayDrumsBtn = document.querySelector("#autoplay-drums");
 
       if (autoplayBtn) {
-        autoplayBtn.style.display = "none !important";
+        autoplayBtn.style = "display: none !important;";
       }
 
       if (autoplayDrumsBtn) {
-        autoplayDrumsBtn.style.display = "none !important";
+        autoplayDrumsBtn.style = "display: none !important;";
       }
 
       for (const [key, value] of Object.entries(files)) {
@@ -1026,7 +1042,7 @@ class VirtualLaunchpad {
             console.log("Autoplay Drums Parsed!");
 
             if (autoplayDrumsBtn) {
-              autoplayDrumsBtn.style.display = "flex !important";
+              autoplayDrumsBtn.style = "display: flex !important;";
             }
           } else {
             this.autoPlay = data;
@@ -1035,7 +1051,7 @@ class VirtualLaunchpad {
             console.log("Autoplay Parsed!");
 
             if (autoplayBtn) {
-              autoplayBtn.style.display = "flex !important";
+              autoplayBtn.style = "display: flex !important;";
             }
           }
         }
