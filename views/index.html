@@ -7,8 +7,8 @@
   <title>replit</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link href="styles/style.css" rel="stylesheet" type="text/css" />
-  <link id="lptheme" href="styles/themes/colorful/colorful.css" rel="stylesheet" type="text/css" />
-  <link id="lpskin" href="styles/themes/colorful/colorful-skin.css" rel="stylesheet" type="text/css" />
+  <!-- <link id="lptheme" href="styles/themes/colorful/colorful.css" rel="stylesheet" type="text/css" />
+  <link id="lpskin" href="styles/themes/colorful/colorful-skin.css" rel="stylesheet" type="text/css" /> -->
   <link href="styles/launchpad.css" rel="stylesheet" type="text/css" />
   <script src="/libs/jszip.js"></script>
   <script src="/libs/howler.js"></script>
@@ -53,6 +53,14 @@
         <div class="autoplay-btns">
           <button id="autoplay" class="autoplay-btn" style="display: none;"><i class="material-symbols-outlined">play_arrow</i>Autoplay</button>
           <button id="autoplay-drums" class="autoplay-btn" style="display: none;"><i class="material-symbols-outlined">skip_next</i>Autoplay Drums</button>
+        </div>
+
+        <div class="themes">
+          <label for="theme">Select Theme:</label>
+          <select name="themes" id="theme">
+            <option value="colorful" selected>Launchpad Pro</option>
+            <option value="lpx">Launchpad X</option>
+          </select>
         </div>
       </div>
     </div>

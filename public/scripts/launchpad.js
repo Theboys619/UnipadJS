@@ -10,6 +10,41 @@ let globalChain = 0;
 
 const velocities = [];
 
+const RGBToHSL = (color) => {
+  const colors = color.match(/rgba?\( *(\d+) *, *(\d+) *, *(\d+)( *, *(\d+(\.?\d+)) *)?\)/);
+
+  // console.log(color, colors);
+
+  let r = parseInt(colors[1]);
+  let g = parseInt(colors[2]);
+  let b = parseInt(colors[3]);
+
+  let a = colors.length == 7 ? parseInt(colors[5]) : 1;
+
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const l = Math.max(r, g, b);
+  const s = l - Math.min(r, g, b);
+  const h = s
+    ? l === r
+      ? (g - b) / s
+      : l === g
+      ? 2 + (b - r) / s
+      : 4 + (r - g) / s
+    : 0;
+
+  const hsl = [
+    60 * h < 0 ? 60 * h + 360 : 60 * h,
+    100 * (s ? (l <= 0.5 ? s / (2 * l - s) : s / (2 - (2 * l - s))) : 0),
+    (100 * (2 * l - s)) / 2,
+  ];
+
+  let hsldata = `hsl${a < 1 ? 'a' : ''}(` + `${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%` + (a < 1 ? + `, ${a})` : ")");
+
+  return hsldata;
+};
+
 function getVelocities() {
   const velocityColors =
   `0,0,0
@@ -404,7 +439,16 @@ class Button {
     this.pressed = false;
     this.hasPickedUp = true;
     this.color = this.offColor;
-    this.element.style.backgroundColor = this.color;
+
+    if (this.virtualPad.lightEffect == 1) {
+      this.element.style.backgroundColor = this.color;
+    } else if (this.virtualPad.lightEffect == 2) {
+      this.element.style.borderColor = this.color;
+    } else if (this.virtualPad.lightEffect == 3) {
+      this.element.style.backgroundColor = this.color;
+      this.element.style.borderColor = this.color;
+    }
+    // this.element.style.backgroundColor = this.color;
   }
 
   reset() {
@@ -431,8 +475,32 @@ class Button {
     this.pressed = false;
     this.hasPickedUp = true;
     this.color = this.offColor;
-    this.element.style.backgroundColor = this.color;
-    this.element.style.boxShadow = "";
+
+    if (this.virtualPad.lightEffect == 1) {
+      this.element.style.backgroundColor = this.color;
+    } else if (this.virtualPad.lightEffect == 2) {
+      this.element.style.borderColor = this.color;
+    } else if (this.virtualPad.lightEffect == 3) {
+      this.element.style.backgroundColor = this.color;
+      this.element.style.borderColor = this.color;
+    }
+
+    this.element.style.color = "";
+  }
+
+  resetColors() {
+    this.color = this.offColor;
+
+    if (this.virtualPad.lightEffect == 1) {
+      this.element.style.backgroundColor = this.color;
+    } else if (this.virtualPad.lightEffect == 2) {
+      this.element.style.borderColor = this.color;
+    } else if (this.virtualPad.lightEffect == 3) {
+      this.element.style.backgroundColor = this.color;
+      this.element.style.borderColor = this.color;
+    }
+
+    this.element.style.color = "";
   }
 
   getLedCounter(chain = globalChain) {
@@ -556,12 +624,21 @@ class Button {
       this.update();
     }
 
-    this.element.style.backgroundColor = this.color;
+    if (this.virtualPad.lightEffect == 1) {
+      this.element.style.backgroundColor = this.color;
+    } else if (this.virtualPad.lightEffect == 2) {
+      this.element.style.borderColor = this.color;
+    } else if (this.virtualPad.lightEffect == 3) {
+      this.element.style.backgroundColor = this.color;
+      this.element.style.borderColor = this.color;
+    }
+    // this.element.style.backgroundColor = this.color;
 
     if (this.color == this.offColor || this.color == velocities[0]) {
-      this.element.style.boxShadow = ``;
+      this.element.style.color = ``;
     } else {
-      this.element.style.boxShadow = `0px 0px 12px 3px ${this.color}`;
+      if (this.virtualPad.glowEffect)
+        this.element.style.color = `${this.color}`;
     }
   }
 
@@ -593,7 +670,7 @@ class Button {
 }
 
 class VirtualLaunchpad {
-  constructor(element, offColor) {
+  constructor(element, options) {
     /**
      * @type {HTMLDivElement}
      */
@@ -612,9 +689,11 @@ class VirtualLaunchpad {
     this.buttons = [];
     this.funcButtons = [];
 
-    this.noOffColor = offColor ? false : true;
+    this.gradientEffect = options?.gradient ? true : false;
 
-    this.offColor = this.noOffColor ? "#808080" : offColor;
+    this.noOffColor = options?.offColor ? false : true;
+
+    this.offColor = this.noOffColor ? "#808080" : options.offColor;
     velocities[0] = this.offColor;
 
     this.autoPlay = "";
@@ -622,7 +701,15 @@ class VirtualLaunchpad {
 
     this.loaded = false;
 
+    this.theme = options?.theme ?? "colorful";
+    this.themeEls = [];
+
+    this.lightEffect = 1;
+    this.glowEffect = true;
+
     requestAnimationFrame(this.updateButtons.bind(this));
+
+    this.loadTheme();
 
     this.populate();
 
@@ -633,10 +720,106 @@ class VirtualLaunchpad {
     this.gradients = ["rgb(6, 0, 90)", "rgb(32, 37, 85)", "rgb(0, 29, 71)"];
   }
 
+  async loadTheme() {
+    const name = this.theme.toLowerCase().replace(/ /g, "-");
+    const resp = await fetch(`/styles/themes/${name}/${name}-skin.css`);
+
+    if (resp.status != 200) {
+      console.error("Failed to get theme:", name, "and", name + "-skin");
+      return;
+    }
+
+    const data = (await resp.text()).replace(/\r/g, "");
+    const finder = /\/\* *Skin Settings *\n( *\* *[a-zA-Z0-9]* *\n )+(\* *(\@[a-zA-Z]+) *([a-zA-Z0-9\-\_]+) *\n )+\*\//g;
+
+    const css = document.createElement("style");
+    css.innerHTML = data;
+
+    document.head.appendChild(css);
+
+    const cssMain = document.createElement("link");
+    cssMain.rel = "stylesheet";
+    cssMain.type = "text/css";
+    cssMain.href = `/styles/themes/${name}/${name}.css`;
+
+    document.head.appendChild(cssMain);
+
+    if (this.themeEls.length > 0) {
+      for (const el of this.themeEls) {
+        el.remove();
+      }
+    }
+
+    this.themeEls.push(css);
+    this.themeEls.push(cssMain);
+
+    for (const funcBtn of this.funcButtons) {
+      funcBtn.reset();
+    }
+
+    for (const buttons of this.buttons) {
+      for (const button of buttons) {
+        button.resetColors();
+      }
+    }
+
+    const match = data.match(finder);
+    let applyThemeSettings = false;
+    if (match) {
+      const matches = match[0].matchAll(/(\* *(\@[a-zA-Z]+) *([a-zA-Z0-9\-\_]+) *\n )/g);
+
+      let setting = null;
+      while (!(setting = matches.next()).done) {
+        const key = setting.value[2].toLowerCase().trim();
+        const value = setting.value[3].trim();
+        const valueL = value.toLowerCase().trim();
+
+        switch (key) {
+          case "@gradienteffect": {
+            this.gradientEffect = valueL === "on" || valueL == "true" ? true : false;
+            break;
+          }
+
+          case "@lighton": {
+            if (valueL == "stroke") {
+              this.lightEffect = 2;
+            } else if (valueL == "both") {
+              this.lightEffect = 3;
+            } else if (["background", "back", "button", ""].includes(valueL)) {
+              this.lightEffect = 1;
+            } else {
+              this.lightEffect = 1;
+            }
+            break;
+          }
+
+          case "@glow": {
+            if (valueL === "on" || valueL === "true") {
+              this.glowEffect = true;
+            } else if (valueL === "off" || valueL === "false" || valueL === "") {
+              this.glowEffect = false;
+            }
+          }
+        }
+      }
+
+      applyThemeSettings = true;
+    }
+
+    this.gradients = this.defaultGradients;
+    this.updateGradient();
+
+    if (!this.gradientEffect) {
+      const root = document.querySelector("#app");
+
+      root.style = "";
+    }
+  }
+
   updateGradient() {
     const root = document.querySelector("#app");
 
-    if (!root) return;
+    if (!root || !this.gradientEffect) return;
 
     root.style = `background: linear-gradient(308deg, ${this.gradients[0]} 15%, ${this.gradients[1]} 41%, ${this.gradients[2]} 84%) !important;`;
   }
@@ -863,23 +1046,48 @@ class VirtualLaunchpad {
       }
     }
 
-    btn.style.backgroundColor = this.offColor;
+    if (this.lightEffect == 1) {
+      btn.style.backgroundColor = this.offColor;
+    } else if (this.lightEffect == 2) {
+      btn.style.borderColor = this.offColor;
+    } else if (this.lightEffect == 3) {
+      btn.style.backgroundColor = this.offColor;
+      btn.style.borderColor = this.offColor;
+    }
+    // btn.style.backgroundColor = this.offColor;
 
     const funcOffColor = btn.style.getPropertyValue("background-color");
 
     this.funcButtons.push({
       element: btn,
       reset: () => {
-        btn.style.boxShadow = ``;
-        btn.style.backgroundColor = this.noOffColor ? funcOffColor : this.offColor;
+        btn.style.color = ``;
+
+        if (this.lightEffect == 1) {
+          btn.style.backgroundColor = this.noOffColor ? funcOffColor : this.offColor;
+        } else if (this.lightEffect == 2) {
+          btn.style.borderColor = this.noOffColor ? funcOffColor : this.offColor;
+        } else if (this.lightEffect == 3) {
+          btn.style.backgroundColor = this.noOffColor ? funcOffColor : this.offColor;
+          btn.style.borderColor = this.noOffColor ? funcOffColor : this.offColor;
+        }
+        // btn.style.backgroundColor = this.noOffColor ? funcOffColor : this.offColor;
       },
       setColor: (color) => {
-        btn.style.backgroundColor = color;
+        if (this.lightEffect == 1) {
+          btn.style.backgroundColor = color;
+        } else if (this.lightEffect == 2) {
+          btn.style.borderColor = color;
+        } else if (this.lightEffect == 3) {
+          btn.style.backgroundColor = color;
+          btn.style.borderColor = color;
+        }
+        // btn.style.backgroundColor = color;
 
         let btnId = parseInt(btn.getAttribute("data-func-id"));
 
         if (color == this.offColor || color == velocities[0]) {
-          btn.style.boxShadow = ``;
+          btn.style.color = ``;
           if (btnId > 24 && btnId <= 32) {
             this.gradients[2] = this.defaultGradients[2];
           }
@@ -892,7 +1100,8 @@ class VirtualLaunchpad {
             this.gradients[0] = this.defaultGradients[0];
           }
         } else {
-          btn.style.boxShadow = `0px 0px 12px 3px ${color}`;
+          if (this.glowEffect)
+            btn.style.color = `${color}`;
 
           const gradient = color.substring(0, color.length - 2) + "0.35)";
 

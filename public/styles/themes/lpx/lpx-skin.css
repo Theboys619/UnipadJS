@@ -1,8 +1,8 @@
 /* Skin Settings
  *
- * @name Colorful
- * @lightOn background
- * @gradientEffect true
+ * @name lpx
+ * @lightOn both
+ * @gradientEffect false
  * @glow true
  */
 
@@ -15,8 +15,8 @@
    * The middle row contains the side functional circle buttons and the middle main 8x8 button grid
    * The bottom row is also just the corners (for logos) and the functional circle buttons
    */
-  grid-template-columns: 64px 512px 64px;
-  grid-template-rows: 64px 512px 64px;
+  grid-template-columns: 576px 68px;
+  grid-template-rows: 72px 576px;
 
   /* The gap between the all the buttons */
   gap: 4px;
@@ -33,23 +33,25 @@
   box-shadow: 2px 1px 16px 10px black;
 
   /* This added padding on every side so the buttons aren't touching the edges. */
-  padding: 6px;
+  padding: 24px;
 }
 
 .lp-func-btns {
-  gap: 2px;
+  gap: 4px;
+
+  padding: 2px !important;
 }
 
 .lp-func-btn {
-  width: 65%;
-  height: 65%;
+  width: 98%;
+  height: 98%;
 
   background-color: rgba(15, 15, 15, 0.95);
 
   border-width: 1px;
-  border-radius: 50%;
+  /* border-radius: 50%; */
 
-  border-color: rgba(83, 83, 83, 0.5);
+  border-color: rgba(110, 110, 110, 0.5);
   border-style: solid;
 
   box-shadow: 0px 0px 12px 3px;
@@ -59,12 +61,14 @@
 /* Launchpad Button */
 .lp-btn {
   /* 100% fills the button to the button container */
-  width: 100%;
-  height: 100%;
+  width: 95%;
+  height: 95%;
 
-  background-color: rgba(15, 15, 15, 0.95);
+  align-self: center;
 
-  border-color: rgba(83, 83, 83, 0.5);
+  background-color: rgba(116, 116, 116, 0.95);
+
+  border-color: rgba(44, 44, 44, 0.5);
   border-style: solid;
 
   border-width: 1px;
@@ -94,4 +98,35 @@
 /* Launchpad Button Container */
 #launchpad-btns {
   gap: 4px;
+
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  justify-items: center;
+
+  padding: 2px;
+}
+
+#lp-middle-left {
+  display: none;
+}
+
+#lp-bottom-middle {
+  display: none;
+}
+
+#lp-top-right {
+  /* display: none; */
+}
+
+#lp-top-left {
+  display: none;
+}
+
+#lp-bottom-right {
+  display: none;
+}
+
+#lp-bottom-left {
+  display: none;
 }
