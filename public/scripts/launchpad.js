@@ -503,6 +503,16 @@ class Button {
     this.element.style.color = "";
   }
 
+  resetChain() {
+    this.sequenceCounter = [
+      0, 0, 0, 0, 0, 0, 0, 0
+    ];
+
+    this.soundCounter = [
+      0, 0, 0, 0, 0, 0, 0, 0
+    ];
+  }
+
   getLedCounter(chain = globalChain) {
     return this.sequenceCounter[chain];
   }
@@ -602,13 +612,13 @@ class Button {
         this.setSoundCounter(soundCounter + 1, myChain);
 
         if (sound.wormhole > 0) {
-          setChain(sound.wormhole);
+          this.virtualPad.setChain(sound.wormhole);
         }
       } else if (reps > 0) {
         this.setSoundCounter(soundCounter + 1, myChain);
 
         if (sound.wormhole > 0) {
-          setChain(sound.wormhole);
+          this.virtualPad.setChain(sound.wormhole);
         }
       }
       sound.playCount = 0;
@@ -855,7 +865,7 @@ class VirtualLaunchpad {
     this.gradients = this.defaultGradients;
     this.updateGradient();
 
-    setChain(1);
+    this.setChain(1);
   }
 
   reload() {
@@ -872,7 +882,7 @@ class VirtualLaunchpad {
 
     allSounds = {};
 
-    setChain(1);
+    this.setChain(1);
 
     for (const funcButton of this.funcButtons) {
       funcButton.element.remove();
@@ -921,7 +931,7 @@ class VirtualLaunchpad {
       switch (kind) {
         case "c":
         case "chain": {
-          setChain(parseInt(cols[1]));
+          this.setChain(parseInt(cols[1]));
           break;
         }
         case "o":
@@ -1161,9 +1171,19 @@ class VirtualLaunchpad {
     requestAnimationFrame(this.updateButtons.bind(this));
   }
 
+  setChain(chain = 1) {
+    for (const buttons of this.buttons) {
+      for (const button of buttons) {
+        button.resetChain();
+      }
+    }
+
+    setChain(chain);
+  }
+
   funcButtonPress(id) {
     if (id > 8 && id <= 16) {
-      setChain(id - 8);
+      this.setChain(id - 8);
     }
   }
 
