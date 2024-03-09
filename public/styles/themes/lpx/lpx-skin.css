@@ -1,7 +1,7 @@
 /* Skin Settings
  *
  * @name lpx
- * @lightOn both
+ * @lightOn button:stroke
  * @gradientEffect true
  * @glow true
  */
@@ -48,7 +48,7 @@
 
   background-color: rgba(15, 15, 15, 0.95);
 
-  border-width: 1px;
+  border-width: 2px;
   /* border-radius: 50%; */
 
   border-color: rgba(110, 110, 110, 0.5);

@@ -10,6 +10,31 @@ let globalChain = 0;
 
 const velocities = [];
 
+const realPad = new LaunchpadX();
+
+realPad.on("midiReady", () => {
+  const devices = realPad.getDevices();
+
+  const selection = document.getElementById("devices");
+
+  for (const device of devices) {
+      const opt = document.createElement("option");
+      opt.value = device.name;
+      opt.innerText = device.name;
+
+      selection.appendChild(opt);
+  }
+
+  selection.addEventListener("change", (e) => {
+    if (selection.value && selection.value != "None")
+      realPad.getDevice(selection.value);
+  });
+});
+
+realPad.on("deviceReady", () => {
+  realPad.clearLeds();
+})
+
 const RGBToHSL = (color) => {
   const colors = color.match(/rgba?\( *(\d+) *, *(\d+) *, *(\d+)( *, *(\d+(\.?\d+)) *)?\)/);
 
@@ -187,6 +212,10 @@ function setChain(chain) {
   console.log("Chain set: " + globalChain);
 }
 
+function xyToLed(x, y) {
+  return (90 - y * 10) + (x);
+}
+
 class LedButton {
   constructor(vpad, sequence, x, y, data, repetitions = 1) {
     this.sequence = sequence;
@@ -244,13 +273,18 @@ class LedButton {
             const velColor = velocities[velocity];
 
             this.virtualPad.funcButtons[x - 1].setColor(velColor);
+            realPad.ccLedVelOn(x, velocity);
             break;
           }
 
+          const intx = parseInt(x);
+          const inty = parseInt(y);
+
           if (color == "a" || color == "auto") {
-            this.virtualPad.getButton(parseInt(x), parseInt(y)).setColor(velocities[velocity]);
+            this.virtualPad.getButton(intx, inty).setColor(velocities[velocity]);
+            realPad.ledVelOn(xyToLed(intx, inty), velocity);
           } else {
-            this.virtualPad.getButton(parseInt(x), parseInt(y)).setColor("#" + color);
+            this.virtualPad.getButton(intx, inty).setColor("#" + color);
           }
 
           break;
@@ -267,10 +301,15 @@ class LedButton {
           // Circle
           if (y == "*" || y == "mc") {
             this.virtualPad.funcButtons[x - 1].setColor(this.virtualPad.offColor);
+            realPad.ccLedOff(x);
             break;
           }
 
-          this.virtualPad.getButton(parseInt(x), parseInt(y)).setColor(this.virtualPad.offColor);
+          const intx = parseInt(x);
+          const inty = parseInt(y);
+
+          this.virtualPad.getButton(intx, inty).setColor(this.virtualPad.offColor);
+          realPad.ledOff(xyToLed(intx, inty));
 
           break;
         }
@@ -440,9 +479,9 @@ class Button {
     this.hasPickedUp = true;
     this.color = this.offColor;
 
-    if (this.virtualPad.lightEffect == 1) {
+    if (this.virtualPad.lightEffect == 1 || this.virtualPad.lightEffect == 4) {
       this.element.style.backgroundColor = this.color;
-    } else if (this.virtualPad.lightEffect == 2) {
+    } else if (this.virtualPad.lightEffect == 2 || this.virtualPad.lightEffect == 5) {
       this.element.style.borderColor = this.color;
     } else if (this.virtualPad.lightEffect == 3) {
       this.element.style.backgroundColor = this.color;
@@ -476,9 +515,9 @@ class Button {
     this.hasPickedUp = true;
     this.color = this.offColor;
 
-    if (this.virtualPad.lightEffect == 1) {
+    if (this.virtualPad.lightEffect == 1 || this.virtualPad.lightEffect == 4) {
       this.element.style.backgroundColor = this.color;
-    } else if (this.virtualPad.lightEffect == 2) {
+    } else if (this.virtualPad.lightEffect == 2 || this.virtualPad.lightEffect == 5) {
       this.element.style.borderColor = this.color;
     } else if (this.virtualPad.lightEffect == 3) {
       this.element.style.backgroundColor = this.color;
@@ -491,9 +530,9 @@ class Button {
   resetColors() {
     this.color = this.offColor;
 
-    if (this.virtualPad.lightEffect == 1) {
+    if (this.virtualPad.lightEffect == 1 || this.virtualPad.lightEffect == 4) {
       this.element.style.backgroundColor = this.color;
-    } else if (this.virtualPad.lightEffect == 2) {
+    } else if (this.virtualPad.lightEffect == 2 || this.virtualPad.lightEffect == 5) {
       this.element.style.borderColor = this.color;
     } else if (this.virtualPad.lightEffect == 3) {
       this.element.style.backgroundColor = this.color;
@@ -634,9 +673,9 @@ class Button {
       this.update();
     }
 
-    if (this.virtualPad.lightEffect == 1) {
+    if (this.virtualPad.lightEffect == 1 || this.virtualPad.lightEffect == 4) {
       this.element.style.backgroundColor = this.color;
-    } else if (this.virtualPad.lightEffect == 2) {
+    } else if (this.virtualPad.lightEffect == 2 || this.virtualPad.lightEffect == 5) {
       this.element.style.borderColor = this.color;
     } else if (this.virtualPad.lightEffect == 3) {
       this.element.style.backgroundColor = this.color;
@@ -743,7 +782,7 @@ class VirtualLaunchpad {
     }
 
     const data = (await resp.text()).replace(/\r/g, "");
-    const finder = /\/\* *Skin Settings *\n( *\* *[a-zA-Z0-9]* *\n )+(\* *(\@[a-zA-Z]+) *([a-zA-Z0-9\-\_]+) *\n )+\*\//g;
+    const finder = /\/\* *Skin Settings *\n( *\* *[a-zA-Z0-9]* *\n )+(\* *(\@[a-zA-Z]+) *([a-zA-Z0-9\-\_\:]+) *\n )+\*\//g;
 
     const css = document.createElement("style");
     css.innerHTML = data;
@@ -779,13 +818,15 @@ class VirtualLaunchpad {
     const match = data.match(finder);
     let applyThemeSettings = false;
     if (match) {
-      const matches = match[0].matchAll(/(\* *(\@[a-zA-Z]+) *([a-zA-Z0-9\-\_]+) *\n )/g);
+      const matches = match[0].matchAll(/(\* *(\@[a-zA-Z]+) *([a-zA-Z0-9\-\_\:]+) *\n )/g);
 
       let setting = null;
       while (!(setting = matches.next()).done) {
         const key = setting.value[2].toLowerCase().trim();
         const value = setting.value[3].trim();
         const valueL = value.toLowerCase().trim();
+
+        console.log(valueL);
 
         switch (key) {
           case "@gradienteffect": {
@@ -798,6 +839,10 @@ class VirtualLaunchpad {
               this.lightEffect = 2;
             } else if (valueL == "both") {
               this.lightEffect = 3;
+            } else if (["gridbg:funcstroke", "gridbutton:funcstroke", "button:stroke"].includes(valueL)) {
+              this.lightEffect = 4;
+            } else if (["gridstroke:funcbg", "gridstroke:funcbutton", "stroke:button"].includes(valueL)) {
+              this.lightEffect = 5;
             } else if (["background", "back", "button", ""].includes(valueL)) {
               this.lightEffect = 1;
             } else {
@@ -870,6 +915,8 @@ class VirtualLaunchpad {
     this.gradients = this.defaultGradients;
     this.updateGradient();
 
+    realPad.clearLeds();
+
     this.setChain(1);
   }
 
@@ -904,6 +951,8 @@ class VirtualLaunchpad {
 
     this.buttons = [];
     this.funcButtons = [];
+
+    realPad.clearLeds();
 
     this.populate();
   }
@@ -1178,9 +1227,9 @@ class VirtualLaunchpad {
       }
     }
 
-    if (this.lightEffect == 1) {
+    if (this.lightEffect == 1 || this.lightEffect == 5) {
       btn.style.backgroundColor = this.offColor;
-    } else if (this.lightEffect == 2) {
+    } else if (this.lightEffect == 2 || this.lightEffect == 4) {
       btn.style.borderColor = this.offColor;
     } else if (this.lightEffect == 3) {
       btn.style.backgroundColor = this.offColor;
@@ -1195,9 +1244,9 @@ class VirtualLaunchpad {
       reset: () => {
         btn.style.color = ``;
 
-        if (this.lightEffect == 1) {
+        if (this.lightEffect == 1 || this.lightEffect == 5) {
           btn.style.backgroundColor = this.noOffColor ? funcOffColor : this.offColor;
-        } else if (this.lightEffect == 2) {
+        } else if (this.lightEffect == 2 || this.lightEffect == 4) {
           btn.style.borderColor = this.noOffColor ? funcOffColor : this.offColor;
         } else if (this.lightEffect == 3) {
           btn.style.backgroundColor = this.noOffColor ? funcOffColor : this.offColor;
@@ -1206,9 +1255,9 @@ class VirtualLaunchpad {
         // btn.style.backgroundColor = this.noOffColor ? funcOffColor : this.offColor;
       },
       setColor: (color) => {
-        if (this.lightEffect == 1) {
+        if (this.lightEffect == 1 || this.lightEffect == 5) {
           btn.style.backgroundColor = color;
-        } else if (this.lightEffect == 2) {
+        } else if (this.lightEffect == 2 || this.lightEffect == 4) {
           btn.style.borderColor = color;
         } else if (this.lightEffect == 3) {
           btn.style.backgroundColor = color;
