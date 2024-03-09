@@ -18,12 +18,38 @@ theme.addEventListener("change", (e) => {
   virtualPad.loadTheme();
 });
 
+let sidebarHidden = false;
+
 document.addEventListener("keydown", (e) => {
-  if (e.code == "Space") {
-    virtualPad.reset();
-    virtualPad.playAuto();
-  } else if (e.code == "ControlLeft") {
-    virtualPad.reset();
-    virtualPad.playAuto(true);
-  }
+  // if (e.code == "Space") {
+  //   virtualPad.reset();
+  //   virtualPad.playAuto();
+  // } else if (e.code == "ControlLeft") {
+  //   virtualPad.reset();
+  //   virtualPad.playAuto(true);
+  // }
+
+  if (e.code == "ControlLeft") {
+      const sidebar = document.getElementById("launchpad-sidebar");
+      const app = document.getElementById("app");
+
+      if (sidebarHidden) {
+        sidebar.style.setProperty("display", "");
+        document.querySelector("#hiddenSidebar").remove();
+      } else {
+        sidebar.style.setProperty("display", "none");
+
+        const style = document.createElement("style");
+        style.innerHTML = `#app {
+  grid-template-columns: 1fr !important;
+        }`.trim();
+        style.id = "hiddenSidebar";
+
+        document.head.appendChild(style);
+      }
+
+      sidebarHidden = !sidebarHidden;
+    }
+
+  // virtualPad.playNext();
 });

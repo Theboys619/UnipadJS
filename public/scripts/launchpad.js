@@ -693,6 +693,9 @@ class VirtualLaunchpad {
       producer: "Not Loaded"
     };
 
+    this.autoPlayLearn = [];
+    this.learnPos = 0;
+
     /**
      * @type Button[][]
      */
@@ -852,6 +855,8 @@ class VirtualLaunchpad {
   }
 
   reset() {
+    this.learnPos = 0;
+
     for (const buttons of this.buttons) {
       for (const button of buttons) {
         button.reset();
@@ -869,6 +874,8 @@ class VirtualLaunchpad {
   }
 
   reload() {
+    this.learnPos = 0;
+
     this.info = {
       artist: "Not Loaded",
       song: "Not Loaded",
@@ -899,6 +906,121 @@ class VirtualLaunchpad {
     this.funcButtons = [];
 
     this.populate();
+  }
+
+  playNext() {
+    const type = this.autoPlayLearn[this.learnPos++];
+
+    switch (type.kind) {
+      case "press": {
+        this.buttonDown(type.pos[0], type.pos[1]);
+        this.buttonUp(type.pos[0], type.pos[1]);
+        if (!type.delayed) {
+          this.playNext();
+        }
+        break;
+      }
+
+      case "chain": {
+        this.setChain(type.chain);
+        this.playNext();
+        break;
+      }
+    }
+  }
+
+  parseLearn(drums = false) {
+    if (!this.loaded) {
+      console.error("All data not loaded yet!");
+      return;
+    }
+
+    const data = drums ? this.autoPlayDrums : this.autoPlay;
+    const autoPlayData = data.trim().split("\n");
+    let line = 0;
+
+    while (line < autoPlayData.length) {
+      if (line >= autoPlayData.length) return;
+
+      const lineData = autoPlayData[line].trim();
+
+      if (lineData.length == 0) {
+        line++;
+        continue;
+      }
+
+      const cols = lineData.split(/ +/g);
+
+      const kind = cols[0].trim();
+
+      let delayAmt = 0;
+
+      switch (kind) {
+        case "c":
+        case "chain": {
+          // this.setChain(parseInt(cols[1]));
+          this.autoPlayLearn.push({
+            kind: "chain",
+            chain: parseInt(cols[1]),
+            delayed: false
+          });
+
+          break;
+        }
+        case "o":
+        case "on": {
+          const [_, y, x] = cols;
+          
+          // this.buttonDown(x, y);
+
+          this.autoPlayLearn.push({
+            kind: "press",
+            pos: [x, y],
+            delayed: false
+          });
+
+          break;
+        }
+
+        case "f":
+        case "off": {
+          const [_, y, x] = cols;
+          
+          // this.buttonUp(x, y);
+
+          break;
+        }
+
+        case "t":
+        case "touch": {
+          const [_, y, x] = cols;
+          
+          // this.buttonDown(x, y);
+          // this.buttonUp(x, y);
+          this.autoPlayLearn.push({
+            kind: "press",
+            pos: [x, y],
+            delayed: false
+          });
+
+          break;
+        }
+
+        case "d":
+        case "delay": {
+          const [_, delay] = cols;
+          
+          // delayAmt = delay;
+          if (delay > 20)
+            this.autoPlayLearn[this.autoPlayLearn.length - 1].delayed = true;
+            this.autoPlayLearn[this.autoPlayLearn.length - 1].delay = delay;
+
+          break;
+        }
+      }
+
+      line++;
+    }
   }
 
   playAuto(drums = false) {
@@ -1288,6 +1410,8 @@ class VirtualLaunchpad {
 
       this.loaded = true;
       console.log("All Loaded!");
+
+      this.parseLearn(false);
     });
   }
 

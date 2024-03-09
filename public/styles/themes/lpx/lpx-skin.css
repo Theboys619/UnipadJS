@@ -2,7 +2,7 @@
  *
  * @name lpx
  * @lightOn both
- * @gradientEffect false
+ * @gradientEffect true
  * @glow true
  */
 
@@ -15,7 +15,7 @@
    * The middle row contains the side functional circle buttons and the middle main 8x8 button grid
    * The bottom row is also just the corners (for logos) and the functional circle buttons
    */
-  grid-template-columns: 576px 68px;
+  grid-template-columns: 576px 72px;
   grid-template-rows: 72px 576px;
 
   /* The gap between the all the buttons */
